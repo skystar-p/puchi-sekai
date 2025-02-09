@@ -111,7 +111,7 @@ function App() {
       setChatContent("");
       setChatting(true);
       await doMotion("w-adult-think01");
-      const chat = "흥미로운 이야기를 해줘!";
+      const chat = "Rust 프로그래밍 언어에 대해서 알려줘!";
 
       let chatResponse = "";
 

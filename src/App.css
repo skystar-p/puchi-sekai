@@ -29,5 +29,6 @@ div.chat {
 }
 
 p.chat-child {
+  white-space: pre-line;
   text-align: left;
 }
