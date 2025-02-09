@@ -1,11 +1,13 @@
 import { Stage } from '@pixi/react';
 import Live2dModel from './Live2DModel';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { InternalModel, Live2DModel } from 'pixi-live2d-display-mulmotion';
+import { InternalModel, Live2DModel, config as Live2dConfig, MotionPriority } from 'pixi-live2d-display-mulmotion';
 import { ILive2DModelData } from './types';
-import { invoke } from "@tauri-apps/api/core";
+// import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import './zip';
+
+Live2dConfig.logLevel = Live2dConfig.LOG_LEVEL_VERBOSE;
 
 function App() {
   const stage = useRef<Stage>(null);
@@ -13,32 +15,30 @@ function App() {
   const [stageHeight, setStageHeight] = useState(0);
 
   const live2dModel = useRef<Live2DModel<InternalModel>>(null);
-  const [modelName, setModelName] = useState<string | null>("02saki_normal");
+  const [modelName, _setModelName] = useState<string | null>("02saki_normal");
   const [modelData, setModelData] = useState<ILive2DModelData | string>();
-  const [motions, setMotions] = useState<string[]>([]);
-  const [expressions, setExpressions] = useState<string[]>([]);
   const [live2dX, setLive2dX] = useState(0);
   const [live2dY, setLive2dY] = useState(0);
   const [live2dScale, setLive2dScale] = useState(1);
 
   const updateSize = useCallback(() => {
     if (modelData) {
-      const styleWidth = 500;
-      const styleHeight = 500;
+      const styleWidth = window.innerWidth;
+      const styleHeight = window.innerHeight;
 
       setStageWidth(styleWidth);
       setStageHeight(styleHeight);
 
       if (live2dModel.current) {
         const live2dTrueWidth = live2dModel.current.internalModel.originalWidth;
-        const live2dTrueHeight =
-          live2dModel.current.internalModel.originalHeight;
+        const live2dTrueHeight = live2dModel.current.internalModel.originalHeight;
+        console.log(live2dTrueWidth, live2dTrueHeight);
         let scale = Math.min(
           styleWidth / live2dTrueWidth,
           styleHeight / live2dTrueHeight
         );
 
-        scale = (Math.round(scale * 100) / 100) * 1.3;
+        scale = (Math.round(scale * 100) / 100) * 1.5;
         setLive2dScale(scale);
 
         setLive2dX((styleWidth - live2dTrueWidth * scale) / 2);
@@ -49,13 +49,19 @@ function App() {
 
   const onLive2dModelReady = useCallback(() => {
     updateSize();
+
+    (async () => {
+      const model = live2dModel.current;
+
+      await model?.parallelMotion([
+        { group: "w-cool-posenod01", index: 0, priority: MotionPriority.FORCE },
+      ]);
+    })();
   }, [updateSize]);
 
   useEffect(() => {
     const f = async () => {
       if (modelName) {
-        setModelData(undefined);
-
         setModelData(`/${modelName}.zip`);
       }
     };
@@ -63,10 +69,16 @@ function App() {
     f();
   }, [modelName]);
 
-  return (
-    <main className="container">
-      <h1>Live2D Demo</h1>
+  useEffect(() => {
+    window.addEventListener("resize", updateSize);
 
+    return () => {
+      window.removeEventListener("resize", updateSize);
+    }
+  });
+
+  return (
+    <main>
       <Stage
         width={stageWidth}
         height={stageHeight}
@@ -83,7 +95,6 @@ function App() {
           onReady={onLive2dModelReady}
         />
       </Stage>
-
     </main>
   );
 }

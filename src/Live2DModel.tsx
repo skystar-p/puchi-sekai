@@ -3,7 +3,6 @@ import { InternalModel, Live2DModel } from "pixi-live2d-display-mulmotion";
 import {
   BatchRenderer,
   extensions,
-  Extract,
   TickerPlugin,
   Ticker,
 } from "pixi.js";
@@ -17,7 +16,7 @@ interface Live2dModelProps {
   scaleY?: number;
 }
 
-extensions.add(TickerPlugin, Extract, BatchRenderer);
+extensions.add(TickerPlugin, BatchRenderer);
 
 const Component = PixiComponent("Live2dModel", {
   create: (props) => {
@@ -47,7 +46,6 @@ const Live2dModel = forwardRef<
         return;
       }
       _model = await Live2DModel.from(modelData, {
-        autoFocus: false,
         autoHitTest: false,
         ticker: Ticker.shared,
       });
