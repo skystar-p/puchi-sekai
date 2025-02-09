@@ -1,14 +1,39 @@
-import { NineSlicePlane, Stage } from '@pixi/react';
+import { Stage } from '@pixi/react';
 import Live2dModel from './Live2DModel';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { InternalModel, Live2DModel, config as Live2dConfig, MotionPriority } from 'pixi-live2d-display-mulmotion';
 import { ILive2DModelData } from './types';
-import { invoke } from "@tauri-apps/api/core";
+import { Channel, invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import './zip';
-import { Point, Ticker } from 'pixi.js';
+import { Ticker } from 'pixi.js';
 
 Live2dConfig.logLevel = Live2dConfig.LOG_LEVEL_VERBOSE;
+
+type ChatEvent =
+  |
+  {
+    event: "started";
+  }
+  |
+  {
+    event: "response";
+    data: {
+      content: string;
+    }
+  }
+  |
+  {
+    event: "finished";
+  }
+  |
+  {
+    event: "error";
+    data: {
+      message: string;
+    }
+  }
+  ;
 
 function App() {
   const stage = useRef<Stage>(null);
@@ -19,6 +44,8 @@ function App() {
   const [chatHeight, setChatHeight] = useState(0);
 
   const [chatContent, setChatContent] = useState("");
+  const [chatting, setChatting] = useState(false);
+
   const live2dModel = useRef<Live2DModel<InternalModel>>(null);
   const [modelName, _setModelName] = useState<string | null>("02saki_normal");
   const [modelData, setModelData] = useState<ILive2DModelData | string>();
@@ -78,19 +105,44 @@ function App() {
 
     // click handler
     model.on("click", async () => {
-      const chatDummy = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur sed pellentesque justo, sed suscipit turpis. Vestibulum interdum sapien sit amet diam bibendum varius. Curabitur posuere purus ullamcorper, hendrerit lectus sit amet, vestibulum leo. Mauris ullamcorper lacinia risus nec blandit. Aliquam bibendum risus eget purus fermentum, ac mattis velit finibus. Aenean ornare velit a metus ornare, lacinia tempus enim tempor. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum et elementum mi. Proin orci urna, tincidunt sit amet pulvinar eu, pellentesque ultricies lorem. Nunc sed volutpat mi, quis mattis metus. Sed tellus mi, ultrices quis diam quis, vehicula placerat augue. Praesent nunc lorem, ornare id sagittis non, iaculis at tellus.";
+      if (chatting) {
+        return;
+      }
+      setChatContent("");
+      setChatting(true);
+      await doMotion("w-adult-think01");
+      const chat = "흥미로운 이야기를 해줘!";
 
-      let index = 0;
-      const interval = setInterval(() => {
-        if (index < chatDummy.length - 1) {
-          setChatContent((prev) => prev + chatDummy[index]);
-          index++;
-        } else {
-          clearInterval(interval);
+      let chatResponse = "";
+
+      const onEvent = new Channel<ChatEvent>();
+      onEvent.onmessage = async (event) => {
+        switch (event.event) {
+          case "started":
+            await doMotion("w-cool-posenod01");
+            break
+          case "response":
+            chatResponse += event.data.content;
+            setChatContent(chatResponse);
+            break;
+          case "finished":
+            setChatting(false);
+            await doMotion("w-adult-shakehand01");
+            await doMotion("w-cool-posenod01");
+            break;
+          case "error":
+            setChatting(false);
+            setChatContent(event.data.message);
+            break;
+          default:
+            break;
         }
-      }, 20);
+      };
 
-      await doMotion("w-adult-shakehand01");
+      await invoke("chat", {
+        content: chat,
+        onEvent,
+      })
     });
 
     return () => {
