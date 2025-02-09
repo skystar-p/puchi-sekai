@@ -13,8 +13,9 @@
     "windows": [
       {
         "title": "puchi-sekai",
-        "width": 800,
-        "height": 600,
+        "label": "main",
+        "width": 300,
+        "height": 650,
         "decorations": false,
         "transparent": true
       }

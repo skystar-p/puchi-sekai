@@ -1,6 +1,33 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   margin: 0px;
   padding: 0px;
   text-align: center;
   overflow: hidden;
+}
+
+div.chat {
+  display: flex;
+  padding: 10px;
+
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow-y: auto;
+
+  border: 2px solid #FFD95F;
+  background-color: rgba(255, 239, 200, 0.9);
+  border-radius: 16px;
+}
+
+.chat-child {
+  display: inline-block;
+}
+
+p.chat-child {
+  text-align: left;
 }
