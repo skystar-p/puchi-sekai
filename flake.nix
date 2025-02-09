@@ -33,7 +33,6 @@
           nativeBuildInputs = with pkgs; [
             pkg-config
             gobject-introspection
-            cargo
             cargo-tauri
             nodejs
           ];
