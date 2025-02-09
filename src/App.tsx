@@ -43,7 +43,11 @@ function App() {
   const [chatWidth, setChatWidth] = useState(0);
   const [chatHeight, setChatHeight] = useState(0);
 
-  const [chatContent, setChatContent] = useState("");
+  const [chatResponse, setChatResponse] = useState("");
+  const [chatPrompt, setChatPrompt] = useState("");
+  const [chatResponseHistory, setChatResponseHistory] = useState<string[]>([]);
+  const [chatPromptHistory, setChatPromptHistory] = useState<string[]>([]);
+  const chatPromptRef = useRef<HTMLInputElement>(null);
   const [chatting, setChatting] = useState(false);
 
   const live2dModel = useRef<Live2DModel<InternalModel>>(null);
@@ -89,6 +93,12 @@ function App() {
     }
   }, [modelData, chatHeight]);
 
+  const motionPairs = [
+    ["w-adult-blushed04", "face_smile_09"],
+    ["w-adult-think02", "face_surprise_03"],
+    ["w-adult-delicious03", "face_smile_01"],
+  ];
+
   const onLive2dModelReady = useCallback(() => {
     updateSize();
 
@@ -108,41 +118,13 @@ function App() {
       if (chatting) {
         return;
       }
-      setChatContent("");
-      setChatting(true);
-      await doMotion("w-adult-think01");
-      const chat = "Rust 프로그래밍 언어에 대해서 알려줘!";
 
-      let chatResponse = "";
-
-      const onEvent = new Channel<ChatEvent>();
-      onEvent.onmessage = async (event) => {
-        switch (event.event) {
-          case "started":
-            await doMotion("w-cool-posenod01");
-            break
-          case "response":
-            chatResponse += event.data.content;
-            setChatContent(chatResponse);
-            break;
-          case "finished":
-            setChatting(false);
-            await doMotion("w-adult-shakehand01");
-            await doMotion("w-cool-posenod01");
-            break;
-          case "error":
-            setChatting(false);
-            setChatContent(event.data.message);
-            break;
-          default:
-            break;
-        }
-      };
-
-      await invoke("chat", {
-        content: chat,
-        onEvent,
-      })
+      // random motion pair
+      const pair = motionPairs[Math.floor(Math.random() * motionPairs.length)];
+      await Promise.all([
+        doMotion(pair[0], 0, 0),
+        doMotion(pair[1], 0, 1),
+      ]);
     });
 
     return () => {
@@ -171,6 +153,16 @@ function App() {
     }
   });
 
+  const clearChatPrompts = () => {
+    setChatResponse("");
+    setChatPrompt("");
+    setChatResponseHistory([]);
+    if (chatPromptRef.current) {
+      chatPromptRef.current.focus();
+      chatPromptRef.current.value = "";
+    }
+  };
+
   const doMotion = (group: string, index: number = 0, managerIdx: number = 0) => {
     if (!live2dModel.current) {
       return;
@@ -197,6 +189,77 @@ function App() {
     return done
   };
 
+  const submitChat = async () => {
+    if (chatting || !chatPrompt) {
+      return;
+    }
+    if (chatPrompt === "RESET") {
+      clearChatPrompts();
+      return;
+    }
+    let chatPromptCopy = chatPrompt;
+    setChatResponse("");
+    setChatting(true);
+    await Promise.all([
+      doMotion("w-adult-think02", 0, 0),
+      doMotion("face_surprise_03", 0, 1),
+    ]);
+
+    let chatResponse = "";
+
+    const onEvent = new Channel<ChatEvent>();
+    onEvent.onmessage = async (event) => {
+      switch (event.event) {
+        case "started":
+          await Promise.all([
+            doMotion("w-cool-glad01", 0, 0),
+            doMotion("face_smile_04", 0, 1),
+          ]);
+          break
+        case "response":
+          chatResponse += event.data.content;
+          setChatResponse(chatResponse);
+          break;
+        case "finished":
+          setChatting(false);
+          setChatPrompt("");
+          if (chatPromptRef.current) {
+            chatPromptRef.current.focus();
+            chatPromptRef.current.value = "";
+          }
+          setChatResponseHistory([...chatResponseHistory, chatResponse]);
+          setChatPromptHistory([...chatPromptHistory, chatPromptCopy]);
+          await Promise.all([
+            doMotion("w-animal-nod01", 0, 0),
+            doMotion("face_smile_09", 0, 1),
+          ]);
+          break;
+        case "error":
+          setChatting(false);
+          setChatResponse("에러!");
+          setChatPrompt("");
+          if (chatPromptRef.current) {
+            chatPromptRef.current.focus();
+            chatPromptRef.current.value = "";
+          }
+          await Promise.all([
+            doMotion("w-cool-sad01", 0, 0),
+            doMotion("face_baffling_01", 0, 1),
+          ]);
+          break;
+        default:
+          break;
+      }
+    };
+
+    await invoke("chat", {
+      prompt: chatPrompt,
+      previousPrompts: chatPromptHistory,
+      previousResponses: chatResponseHistory,
+      onEvent,
+    })
+  };
+
   return (
     <main>
       <div
@@ -207,8 +270,18 @@ function App() {
         }}
       >
         <p className="chat-child">
-          {chatContent}
+          {chatResponse}
         </p>
+        <form
+          className="row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitChat();
+          }}
+        >
+          <input className="chat-child" onChange={(e) => setChatPrompt(e.currentTarget.value)} ref={chatPromptRef}>
+          </input>
+        </form>
       </div>
       <Stage
         width={stageWidth}

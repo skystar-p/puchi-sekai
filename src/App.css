@@ -32,3 +32,9 @@ p.chat-child {
   white-space: pre-line;
   text-align: left;
 }
+
+input.chat-child {
+  margin-top: 5px;
+  width: 100%;
+  height: 2em;
+}
