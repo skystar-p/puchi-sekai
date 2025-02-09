@@ -1,49 +1,89 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
+import { Stage } from '@pixi/react';
+import Live2dModel from './Live2DModel';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { InternalModel, Live2DModel } from 'pixi-live2d-display-mulmotion';
+import { ILive2DModelData } from './types';
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
+import './zip';
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const stage = useRef<Stage>(null);
+  const [stageWidth, setStageWidth] = useState(0);
+  const [stageHeight, setStageHeight] = useState(0);
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  const live2dModel = useRef<Live2DModel<InternalModel>>(null);
+  const [modelName, setModelName] = useState<string | null>("02saki_normal");
+  const [modelData, setModelData] = useState<ILive2DModelData | string>();
+  const [motions, setMotions] = useState<string[]>([]);
+  const [expressions, setExpressions] = useState<string[]>([]);
+  const [live2dX, setLive2dX] = useState(0);
+  const [live2dY, setLive2dY] = useState(0);
+  const [live2dScale, setLive2dScale] = useState(1);
+
+  const updateSize = useCallback(() => {
+    if (modelData) {
+      const styleWidth = 500;
+      const styleHeight = 500;
+
+      setStageWidth(styleWidth);
+      setStageHeight(styleHeight);
+
+      if (live2dModel.current) {
+        const live2dTrueWidth = live2dModel.current.internalModel.originalWidth;
+        const live2dTrueHeight =
+          live2dModel.current.internalModel.originalHeight;
+        let scale = Math.min(
+          styleWidth / live2dTrueWidth,
+          styleHeight / live2dTrueHeight
+        );
+
+        scale = (Math.round(scale * 100) / 100) * 1.3;
+        setLive2dScale(scale);
+
+        setLive2dX((styleWidth - live2dTrueWidth * scale) / 2);
+        setLive2dY((styleHeight - live2dTrueHeight * scale) / 2);
+      }
+    }
+  }, [modelData]);
+
+  const onLive2dModelReady = useCallback(() => {
+    updateSize();
+  }, [updateSize]);
+
+  useEffect(() => {
+    const f = async () => {
+      if (modelName) {
+        setModelData(undefined);
+
+        setModelData(`/${modelName}.zip`);
+      }
+    };
+
+    f();
+  }, [modelName]);
 
   return (
     <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+      <h1>Live2D Demo</h1>
 
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
+      <Stage
+        width={stageWidth}
+        height={stageHeight}
+        ref={stage}
+        options={{ backgroundAlpha: 0, antialias: true, autoDensity: true }}
       >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
+        <Live2dModel
+          ref={live2dModel}
+          modelData={modelData}
+          x={live2dX}
+          y={live2dY}
+          scaleX={live2dScale}
+          scaleY={live2dScale}
+          onReady={onLive2dModelReady}
         />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
+      </Stage>
+
     </main>
   );
 }
