@@ -218,6 +218,7 @@ function App() {
     ]);
 
     let chatResponse = "";
+    let chatResponseFiltered = "";
 
     const onEvent = new Channel<ChatEvent>();
     onEvent.onmessage = async (event) => {
@@ -230,7 +231,22 @@ function App() {
           break
         case "response":
           chatResponse += event.data.content;
-          setChatResponse(chatResponse);
+
+          const responseTag = "<response>";
+
+          if (chatResponse.includes(responseTag)) {
+            chatResponseFiltered = chatResponse.split(responseTag)[1];
+
+            const responseTagEnd = "</response>";
+            for (let i = 0; i < responseTagEnd.length; i++) {
+              if (chatResponseFiltered.endsWith(responseTagEnd.slice(0, i + 1))) {
+                chatResponseFiltered = chatResponseFiltered.slice(0, -i - 1);
+                break;
+              }
+            }
+          }
+
+          setChatResponse(chatResponseFiltered);
           break;
         case "finished":
           setChatting(false);
