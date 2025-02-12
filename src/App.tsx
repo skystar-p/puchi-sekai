@@ -59,36 +59,48 @@ function App() {
 
   const updateSize = useCallback(() => {
     if (modelData) {
-      const styleWidth = window.innerWidth;
-      const styleHeight = window.innerHeight;
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
 
-      // fix this height
-      const stageHeightFixed = 450;
-      const modelYAdjust = -100;
+      // stage and chat width is window width
+      const stageWidth = windowWidth;
+      const chatWidth = windowWidth;
+      setStageWidth(stageWidth);
+      setChatWidth(chatWidth);
 
-      const modelHeight = stageHeightFixed;
-      const chatHeight = styleHeight - modelHeight;
-
-      setStageWidth(styleWidth);
-      setStageHeight(modelHeight);
-
-      setChatWidth(styleWidth);
+      // evenly split height
+      const stageHeight = windowHeight / 2;
+      const chatHeight = windowHeight / 2;
+      setStageHeight(stageHeight);
       setChatHeight(chatHeight);
 
+      // now position and scale the model correctly
       if (live2dModel.current) {
         const live2dTrueWidth = live2dModel.current.internalModel.originalWidth;
         const live2dTrueHeight = live2dModel.current.internalModel.originalHeight;
+
+        // every part of model should be visible, so scale to fit
         let scale = Math.min(
-          styleWidth / live2dTrueWidth,
-          styleHeight / live2dTrueHeight
+          stageWidth / live2dTrueWidth,
+          stageHeight / live2dTrueHeight
         );
 
-        scale *= 1.5;
-        // scale = (Math.round(scale * 100) / 100) * 1.5;
+        // actual model upper part is empty, so add some scale
+        const additionalScale = 0.3333;
+        scale *= (1 + additionalScale);
         setLive2dScale(scale);
+        const live2dScaledWidth = live2dTrueWidth * scale;
+        const live2dScaledHeight = live2dTrueHeight * scale;
 
-        setLive2dX((styleWidth - live2dTrueWidth * scale) / 2);
-        setLive2dY((styleHeight - live2dTrueHeight * scale) / 2 + modelYAdjust);
+        // position to center
+        const live2dX = (stageWidth - live2dScaledWidth) / 2;
+        const live2dY = (stageHeight - live2dScaledHeight) / 2;
+
+        // now the model is slightly below the center because of additional scaling, so adjust
+        // consider ratio of upper empty part and lower empty part
+        const modelYAdjust = -live2dScaledHeight * (0.8 / 15);
+        setLive2dX(live2dX);
+        setLive2dY(live2dY + modelYAdjust);
       }
     }
   }, [modelData, chatHeight]);
