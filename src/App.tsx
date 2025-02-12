@@ -1,6 +1,6 @@
 import { Stage } from '@pixi/react';
 import Live2dModel from './Live2DModel';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { InternalModel, Live2DModel, config as Live2dConfig, MotionPriority } from 'pixi-live2d-display-mulmotion';
 import { ILive2DModelData } from './types';
 import { Channel, invoke } from "@tauri-apps/api/core";
@@ -103,7 +103,7 @@ function App() {
         setLive2dY(live2dY + modelYAdjust);
       }
     }
-  }, [modelData, chatHeight]);
+  }, [modelData]);
 
   const motionPairs = [
     ["w-adult-blushed04", "face_smile_09"],
@@ -157,13 +157,15 @@ function App() {
   }, [modelName]);
 
   // handle resize
-  useEffect(() => {
-    window.addEventListener("resize", updateSize);
+  useLayoutEffect(() => {
+    const us = updateSize;
+    us();
+    window.addEventListener("resize", us);
 
     return () => {
-      window.removeEventListener("resize", updateSize);
+      window.removeEventListener("resize", us);
     }
-  });
+  }, [updateSize]);
 
   const clearChatPrompts = () => {
     setChatResponse("");
