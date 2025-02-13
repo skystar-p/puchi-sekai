@@ -2993,6 +2993,7 @@ name = "puchi-sekai"
 version = "0.1.0"
 dependencies = [
  "async-openai",
+ "base64 0.22.1",
  "envy",
  "futures",
  "serde",

@@ -16,9 +16,9 @@ impl serde::Serialize for Error {
 }
 
 #[tauri::command]
-pub async fn get_model_data(state: State<'_, Mutex<AppState>>) -> Result<Vec<u8>, Error> {
+pub async fn get_model_data(state: State<'_, Mutex<AppState>>) -> Result<String, Error> {
     let state = state.lock().await;
-    let model_data = state.model_data.clone();
+    let model_data = state.model_data_b64.clone();
 
     Ok(model_data)
 }

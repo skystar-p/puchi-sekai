@@ -145,11 +145,28 @@ function App() {
 
   }, [updateSize]);
 
+  const base64ToArrayBuffer = (base64: string) => {
+    const binaryString = atob(base64);
+
+    const length = binaryString.length;
+    const bytes = new Uint8Array(length);
+
+    for (let i = 0; i < length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    return bytes.buffer;
+  }
+
   // load model from zip
   useEffect(() => {
     const f = async () => {
+      const modelData = await invoke("get_model_data") as string;
+      const modelBlob = new Blob([base64ToArrayBuffer(modelData)]);
+      const url = URL.createObjectURL(modelBlob);
+
       if (modelName) {
-        setModelData(`/${modelName}.zip`);
+        setModelData("zip://" + url);
       }
     };
 
