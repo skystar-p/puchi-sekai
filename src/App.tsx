@@ -51,7 +51,7 @@ function App() {
   const [chatting, setChatting] = useState(false);
 
   const live2dModel = useRef<Live2DModel<InternalModel>>(null);
-  const [modelName, _setModelName] = useState<string | null>("02saki_normal");
+  const [modelName, _setModelName] = useState<string | null>("saki");
   const [modelData, setModelData] = useState<ILive2DModelData | string>();
   const [live2dX, setLive2dX] = useState(0);
   const [live2dY, setLive2dY] = useState(0);
