@@ -2,7 +2,6 @@ import { Stage } from '@pixi/react';
 import Live2dModel from './Live2DModel';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { InternalModel, Live2DModel, config as Live2dConfig, MotionPriority } from 'pixi-live2d-display-mulmotion';
-import { ILive2DModelData } from './types';
 import { Channel, invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import './zip';
@@ -52,7 +51,7 @@ function App() {
 
   const live2dModel = useRef<Live2DModel<InternalModel>>(null);
   const [modelName, _setModelName] = useState<string | null>("saki");
-  const [modelData, setModelData] = useState<ILive2DModelData | string>();
+  const [modelData, setModelData] = useState<string>();
   const [live2dX, setLive2dX] = useState(0);
   const [live2dY, setLive2dY] = useState(0);
   const [live2dScale, setLive2dScale] = useState(1);
