@@ -12,6 +12,7 @@ body {
 }
 
 div.chat {
+  font-size: large;
   display: flex;
   padding: 10px;
 
