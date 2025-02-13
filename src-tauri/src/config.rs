@@ -6,6 +6,8 @@ pub struct Config {
     pub initial_model_data_path: String,
     #[serde(default = "default_system_prompt_file_path")]
     pub system_prompt_file_path: String,
+    #[serde(default = "default_openai_api_key")]
+    pub openai_api_key: String,
 }
 
 fn default_initial_model_data_path() -> String {
@@ -24,4 +26,8 @@ fn default_system_prompt_file_path() -> String {
         .to_str()
         .unwrap()
         .to_string()
+}
+
+fn default_openai_api_key() -> String {
+    std::env::var("OPENAI_API_KEY").unwrap()
 }

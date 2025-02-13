@@ -1,4 +1,5 @@
 use async_openai::{
+    config::OpenAIConfig,
     types::{
         ChatCompletionRequestAssistantMessageArgs, ChatCompletionRequestSystemMessageArgs,
         ChatCompletionRequestUserMessageArgs, CreateChatCompletionRequestArgs,
@@ -7,7 +8,10 @@ use async_openai::{
 };
 use futures::StreamExt;
 use serde::Serialize;
-use tauri::ipc::Channel;
+use tauri::{ipc::Channel, Manager, State};
+use tokio::sync::Mutex;
+
+use crate::AppState;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -46,12 +50,18 @@ const SYSTEM_PROMPT: &str = include_str!(concat!(
 
 #[tauri::command]
 pub async fn chat(
+    state: State<'_, Mutex<AppState>>,
     prompt: String,
     previous_prompts: Vec<String>,
     previous_responses: Vec<String>,
     on_event: Channel<Chat>,
 ) -> Result<(), Error> {
-    let client = Client::new();
+    let state = state.lock().await;
+    let api_key = state.config.openai_api_key.clone();
+    drop(state);
+
+    let client_config = OpenAIConfig::new().with_api_key(api_key);
+    let client = Client::with_config(client_config);
 
     // build message vec
     let system = ChatCompletionRequestSystemMessageArgs::default()

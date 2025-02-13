@@ -1,6 +1,5 @@
-use std::sync::Mutex;
-
 use tauri::Manager;
+use tokio::sync::Mutex;
 
 mod config;
 mod handlers;
