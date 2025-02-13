@@ -8,7 +8,7 @@ use async_openai::{
 };
 use futures::StreamExt;
 use serde::Serialize;
-use tauri::{ipc::Channel, Manager, State};
+use tauri::{ipc::Channel, State};
 use tokio::sync::Mutex;
 
 use crate::AppState;
@@ -43,11 +43,6 @@ pub enum Chat {
     Error { message: String },
 }
 
-const SYSTEM_PROMPT: &str = include_str!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/static/system_prompt.txt"
-));
-
 #[tauri::command]
 pub async fn chat(
     state: State<'_, Mutex<AppState>>,
@@ -58,6 +53,7 @@ pub async fn chat(
 ) -> Result<(), Error> {
     let state = state.lock().await;
     let api_key = state.config.openai_api_key.clone();
+    let system_prompt = state.system_prompt.clone();
     drop(state);
 
     let client_config = OpenAIConfig::new().with_api_key(api_key);
@@ -65,7 +61,7 @@ pub async fn chat(
 
     // build message vec
     let system = ChatCompletionRequestSystemMessageArgs::default()
-        .content(SYSTEM_PROMPT)
+        .content(system_prompt)
         .build()?;
     let mut messages = Vec::from([system.into()]);
     // zip
