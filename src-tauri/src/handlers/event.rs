@@ -29,10 +29,7 @@ impl serde::Serialize for Error {
 }
 
 #[tauri::command]
-pub async fn subscribe_event(
-    app: tauri::AppHandle,
-    on_event: Channel<Event>,
-) -> Result<(), Error> {
+pub async fn subscribe_event(app: tauri::AppHandle, on_event: Channel<Event>) -> Result<(), Error> {
     let state = app.state::<Mutex<AppState>>();
 
     let mut state = state.lock().unwrap();
