@@ -1,6 +1,10 @@
+use std::sync::Mutex;
+
 use futures::StreamExt;
 use serde::Serialize;
-use tauri::ipc::Channel;
+use tauri::{ipc::Channel, Manager};
+
+use crate::AppState;
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event", content = "data")]
@@ -26,7 +30,12 @@ impl serde::Serialize for Error {
 
 #[tauri::command]
 pub async fn subscribe_event(
+    app: tauri::AppHandle,
     on_event: Channel<Event>,
 ) -> Result<(), Error> {
+    let state = app.state::<Mutex<AppState>>();
+
+    let mut state = state.lock().unwrap();
+
     unimplemented!()
 }
