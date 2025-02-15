@@ -3037,6 +3037,7 @@ dependencies = [
  "base64 0.22.1",
  "envy",
  "futures",
+ "puchi-sekai-common",
  "serde",
  "serde_json",
  "tauri",
@@ -3045,6 +3046,13 @@ dependencies = [
  "thiserror 2.0.11",
  "tokio",
  "zeromq",
+]
+
+[[package]]
+name = "puchi-sekai-common"
+version = "0.1.0"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

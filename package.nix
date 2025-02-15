@@ -29,7 +29,7 @@ stdenv.mkDerivation (finalAttrs: {
       src
       cargoRoot
       ;
-    hash = "sha256-EI6bZaGVeWKVUe+l+oc2JbfxoY3RE7QVmv7r2LF/uQ4=";
+    hash = "sha256-HhX6U4oLNDPZHqN753KG5Gixfz06Vfp9zWmbPlwbu3Q=";
   };
 
   cargoRoot = "src-tauri";

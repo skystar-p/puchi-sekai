@@ -1,5 +1,5 @@
 use base64::{prelude::BASE64_STANDARD, Engine};
-use serde::{Deserialize, Serialize};
+use puchi_sekai_common::IPCEvent;
 use tauri::{Emitter, Listener, Manager};
 use tokio::sync::Mutex;
 use zeromq::{Socket, SocketRecv};
@@ -12,9 +12,6 @@ struct AppState {
     pub model_data_b64: String,
     pub system_prompt: String,
 }
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct IPCEvent {}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -49,10 +46,9 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
     let app_handle = app.handle().clone();
     tauri::async_runtime::spawn(async move {
         let mut socket = zeromq::RepSocket::new();
-        socket
-            .connect(&socket_addr)
-            .await
-            .expect("Failed to connect");
+        let file_path = socket_addr.trim_start_matches("ipc://");
+        let _ = tokio::fs::remove_file(&file_path).await;
+        let _ = socket.bind(&socket_addr).await;
 
         loop {
             let received: String = match socket.recv().await {
@@ -68,6 +64,7 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
                     continue;
                 }
             };
+            println!("Received message: {:?}", received);
             let msg: IPCEvent = match serde_json::from_str(&received) {
                 Ok(msg) => msg,
                 Err(e) => {
@@ -92,5 +89,5 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
     };
     app.manage(Mutex::new(state));
 
-    unimplemented!()
+    Ok(())
 }
