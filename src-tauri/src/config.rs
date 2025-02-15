@@ -8,6 +8,8 @@ pub struct Config {
     pub system_prompt_file_path: String,
     #[serde(default = "default_openai_api_key")]
     pub openai_api_key: String,
+    #[serde(default = "default_ipc_socket_address")]
+    pub ipc_socket_address: String,
 }
 
 fn default_initial_model_data_path() -> String {
@@ -29,5 +31,9 @@ fn default_system_prompt_file_path() -> String {
 }
 
 fn default_openai_api_key() -> String {
-    std::env::var("OPENAI_API_KEY").unwrap()
+    std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY must be set")
+}
+
+fn default_ipc_socket_address() -> String {
+    "ipc:///tmp/puchi-sekai".to_string()
 }
