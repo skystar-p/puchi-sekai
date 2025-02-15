@@ -30,6 +30,7 @@
       in
       {
         packages.default = pkgs.callPackage ./package.nix { };
+        packages.ipc = pkgs.callPackage ./package-ipc.nix { };
 
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = with pkgs; [
