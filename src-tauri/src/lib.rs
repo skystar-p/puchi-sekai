@@ -77,8 +77,17 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
     });
 
     // setup ipc event listener
-    app.listen("ipc", |event| {
+    let app_handle = app.handle().clone();
+    app.listen("ipc", move |event| {
         println!("Received IPC event: {:?}", event);
+
+        for (_, window) in app_handle.webview_windows() {
+            if window.is_visible().unwrap() {
+                let _ = window.hide();
+            } else {
+                let _ = window.show();
+            }
+        }
     });
 
     // build app state
