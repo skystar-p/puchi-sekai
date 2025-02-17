@@ -1,4 +1,9 @@
 use base64::{prelude::BASE64_STANDARD, Engine};
+use gtk::{
+    cairo,
+    prelude::{ContainerExt, GtkWindowExt, WidgetExt},
+};
+use gtk_layer_shell::LayerShell;
 use puchi_sekai_common::IPCEvent;
 use tauri::{Emitter, Listener, Manager};
 use tokio::sync::Mutex;
@@ -75,6 +80,44 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
             let _ = app_handle.emit("ipc", msg);
         }
     });
+
+    // make window surface as layer shell
+    let main_window = app.get_webview_window("main").unwrap();
+    main_window.hide()?;
+
+    let gtk_window = gtk::ApplicationWindow::new(&main_window.gtk_window()?.application().unwrap());
+
+    // prevent initial black window
+    gtk_window.set_app_paintable(true);
+
+    // migrate vbox to new layer shell window
+    let vbox = main_window.default_vbox().unwrap();
+    main_window.gtk_window().unwrap().remove(&vbox);
+    gtk_window.add(&vbox);
+
+    // init
+    gtk_window.init_layer_shell();
+
+    // set layer
+    gtk_window.set_layer(gtk_layer_shell::Layer::Top);
+
+    // anchor it to bottom-right
+    gtk_window.set_anchor(gtk_layer_shell::Edge::Right, true);
+    gtk_window.set_anchor(gtk_layer_shell::Edge::Bottom, true);
+
+    // set size
+    gtk_window.set_width_request(300);
+    gtk_window.set_height_request(650);
+
+    // show window first to find actual window
+    gtk_window.show_all();
+
+    // make click-through
+    if let Some(gdk_window) = gtk_window.window() {
+        gdk_window.input_shape_combine_region(&cairo::Region::create(), 0, 0);
+    } else {
+        println!("error: gdk window!");
+    }
 
     // setup ipc event listener
     let app_handle = app.handle().clone();
