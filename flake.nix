@@ -58,7 +58,6 @@
               webkitgtk_4_1
               openssl
               gtk-layer-shell
-              libxkbcommon
             ];
 
             shellHook = ''
