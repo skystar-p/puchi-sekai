@@ -124,7 +124,7 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
 
     let gtk_window = Arc::new(Mutex::new(gtk_window));
 
-    let (ipc_sender, ipc_receiver) = tokio::sync::mpsc::channel(100);
+    let (ipc_sender, ipc_receiver) = tokio::sync::mpsc::channel::<tauri::Event>(100);
 
     MainContext::default().spawn_local(async move {
         let gtk_window = gtk_window.clone();
@@ -135,7 +135,12 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
                 None => return (),
             };
 
-            // let event: IPCEvent = serde_json::from_str(msg.payload());
+            let event: IPCEvent = if let Ok(event) = serde_json::from_str(msg.payload()) {
+                event
+            } else {
+                continue;
+            };
+
             let gtk_window = gtk_window.lock().await;
             if gtk_window.is_visible() {
                 gtk_window.hide();
