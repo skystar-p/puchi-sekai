@@ -1,6 +1,9 @@
+use std::sync::Arc;
+
 use base64::{prelude::BASE64_STANDARD, Engine};
 use gtk::{
     cairo,
+    glib::MainContext,
     prelude::{ContainerExt, GtkWindowExt, WidgetExt},
 };
 use gtk_layer_shell::LayerShell;
@@ -119,18 +122,37 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
         println!("error: gdk window!");
     }
 
+    let gtk_window = Arc::new(Mutex::new(gtk_window));
+
+    let (ipc_sender, ipc_receiver) = tokio::sync::mpsc::channel(100);
+
+    MainContext::default().spawn_local(async move {
+        let gtk_window = gtk_window.clone();
+        let mut receiver = ipc_receiver;
+        loop {
+            let msg = match receiver.recv().await {
+                Some(msg) => msg,
+                None => continue,
+            };
+
+            // let event: IPCEvent = serde_json::from_str(msg.payload());
+            let gtk_window = gtk_window.lock().await;
+            if gtk_window.is_visible() {
+                gtk_window.hide();
+            } else {
+                gtk_window.show();
+            }
+        }
+    });
+
     // setup ipc event listener
-    let app_handle = app.handle().clone();
     app.listen("ipc", move |event| {
         println!("Received IPC event: {:?}", event);
 
-        for (_, window) in app_handle.webview_windows() {
-            if window.is_visible().unwrap() {
-                let _ = window.hide();
-            } else {
-                let _ = window.show();
-            }
-        }
+        let ipc_sender = ipc_sender.clone();
+        tauri::async_runtime::spawn_blocking(move || {
+            let _ = ipc_sender.blocking_send(event);
+        });
     });
 
     // build app state
