@@ -132,7 +132,7 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
         loop {
             let msg = match receiver.recv().await {
                 Some(msg) => msg,
-                None => continue,
+                None => return (),
             };
 
             // let event: IPCEvent = serde_json::from_str(msg.payload());
