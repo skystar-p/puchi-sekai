@@ -8,6 +8,7 @@
 , wrapGAppsHook4
 , openssl
 , webkitgtk_4_1
+, gtk-layer-shell
 ,
 }:
 
@@ -49,6 +50,7 @@ stdenv.mkDerivation (finalAttrs: {
   buildInputs = [
     webkitgtk_4_1
     openssl
+    gtk-layer-shell
   ];
 })
 
