@@ -26,7 +26,7 @@ async fn main() -> anyhow::Result<()> {
 
     let cli = Cli::parse();
 
-    let socket_path = cli.socket.unwrap_or_else(|| "ipc://tmp/puchi-sekai".into());
+    let socket_path = cli.socket.unwrap_or_else(|| "ipc:///tmp/puchi-sekai".into());
 
     // check socket exists if starts with ipc://
     if socket_path.starts_with("ipc://") {
