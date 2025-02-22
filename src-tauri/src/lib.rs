@@ -8,7 +8,7 @@ use gtk::{
 };
 use gtk_layer_shell::LayerShell;
 use puchi_sekai_common::IPCEvent;
-use tauri::{Emitter, Listener, Manager, PhysicalSize};
+use tauri::{Emitter, Listener, Manager};
 use tokio::sync::Mutex;
 use zeromq::{Socket, SocketRecv};
 
@@ -141,11 +141,18 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
                 continue;
             };
 
-            let gtk_window = gtk_window.lock().await;
-            if gtk_window.is_visible() {
-                gtk_window.hide();
-            } else {
-                gtk_window.show();
+            match event {
+                IPCEvent::MainToggle => {
+                    let gtk_window = gtk_window.lock().await;
+                    if gtk_window.is_visible() {
+                        gtk_window.hide();
+                    } else {
+                        gtk_window.show();
+                    }
+                }
+
+                IPCEvent::ModalToggle => {
+                }
             }
         }
     });
