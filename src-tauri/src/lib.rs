@@ -127,6 +127,7 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
 
     let (ipc_sender, ipc_receiver) = tokio::sync::mpsc::channel::<tauri::Event>(100);
 
+    let app_handle = app.handle().clone();
     MainContext::default().spawn_local(async move {
         let gtk_window = gtk_window.clone();
         let mut receiver = ipc_receiver;
@@ -152,7 +153,44 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
                     }
                 }
 
-                IPCEvent::ModalToggle => {}
+                IPCEvent::ModalToggle => {
+                    if app_handle.get_webview_window("modal").is_some() {
+                        continue;
+                    }
+
+                    // second window
+                    let modal_window = tauri::WebviewWindowBuilder::new(
+                        &app_handle,
+                        "modal",
+                        tauri::WebviewUrl::App("index-modal.html".into()),
+                    )
+                    .build()
+                    .unwrap();
+                    modal_window.center().unwrap();
+                    modal_window.set_decorations(false).unwrap();
+                    modal_window.hide().unwrap();
+
+                    // tauri on linux has a bug where the window is not resizable
+                    // so migrate vbox to new application window, and manually set size at it
+                    let model_gtk_window = gtk::ApplicationWindow::new(
+                        &modal_window.gtk_window().unwrap().application().unwrap(),
+                    );
+
+                    // prevent initial black window
+                    model_gtk_window.set_app_paintable(true);
+
+                    // migrate vbox
+                    let vbox = modal_window.default_vbox().unwrap();
+                    modal_window.gtk_window().unwrap().remove(&vbox);
+                    model_gtk_window.add(&vbox);
+
+                    // set size
+                    model_gtk_window.set_width_request(600);
+                    model_gtk_window.set_height_request(600);
+
+                    // show window
+                    model_gtk_window.show_all();
+                }
             }
         }
     });
@@ -166,37 +204,6 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
             let _ = ipc_sender.blocking_send(event);
         });
     });
-
-    // second window
-    let modal_window = tauri::WebviewWindowBuilder::new(
-        app,
-        "modal",
-        tauri::WebviewUrl::App("index-modal.html".into()),
-    )
-    .build()?;
-    modal_window.center()?;
-    modal_window.set_decorations(false)?;
-    modal_window.hide()?;
-
-    // tauri on linux has a bug where the window is not resizable
-    // so migrate vbox to new application window, and manually set size at it
-    let model_gtk_window =
-        gtk::ApplicationWindow::new(&modal_window.gtk_window()?.application().unwrap());
-
-    // prevent initial black window
-    model_gtk_window.set_app_paintable(true);
-
-    // migrate vbox
-    let vbox = modal_window.default_vbox().unwrap();
-    modal_window.gtk_window().unwrap().remove(&vbox);
-    model_gtk_window.add(&vbox);
-
-    // set size
-    model_gtk_window.set_width_request(600);
-    model_gtk_window.set_height_request(600);
-
-    // show window
-    model_gtk_window.show_all();
 
     // build app state
     let state = AppState {
