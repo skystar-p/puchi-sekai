@@ -155,9 +155,11 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
 
                 IPCEvent::OpenModal => {
                     if app_handle.get_webview_window("modal").is_some() {
+                        debug!("modal window already opened, ignoring");
                         continue;
                     }
 
+                    debug!("opening modal window");
                     // second window
                     let modal_window = tauri::WebviewWindowBuilder::new(
                         &app_handle,
