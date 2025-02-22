@@ -10,6 +10,7 @@ use gtk_layer_shell::LayerShell;
 use puchi_sekai_common::IPCEvent;
 use tauri::{Emitter, Listener, Manager};
 use tokio::sync::Mutex;
+use tracing::{debug, error};
 use zeromq::{Socket, SocketRecv};
 
 mod config;
@@ -63,20 +64,20 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
                 Ok(r) => match r.try_into() {
                     Ok(r) => r,
                     Err(e) => {
-                        eprintln!("Error while converting message into string: {:?}", e);
+                        error!("Error while converting message into string: {:?}", e);
                         continue;
                     }
                 },
                 Err(e) => {
-                    eprintln!("Error while receiving message: {:?}", e);
+                    error!("Error while receiving message: {:?}", e);
                     continue;
                 }
             };
-            println!("Received message: {:?}", received);
+            debug!("Received message: {:?}", received);
             let msg: IPCEvent = match serde_json::from_str(&received) {
                 Ok(msg) => msg,
                 Err(e) => {
-                    eprintln!("Error while parsing message: {:?}", e);
+                    error!("Error while parsing message: {:?}", e);
                     continue;
                 }
             };
@@ -119,7 +120,7 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
     if let Some(gdk_window) = gtk_window.window() {
         gdk_window.input_shape_combine_region(&cairo::Region::create(), 0, 0);
     } else {
-        println!("error: gdk window!");
+        error!("error: cannot get gdk window to make click-through");
     }
 
     let gtk_window = Arc::new(Mutex::new(gtk_window));
@@ -151,15 +152,14 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
                     }
                 }
 
-                IPCEvent::ModalToggle => {
-                }
+                IPCEvent::ModalToggle => {}
             }
         }
     });
 
     // setup ipc event listener
     app.listen("ipc", move |event| {
-        println!("Received IPC event: {:?}", event);
+        debug!("Received IPC event: {:?}", event);
 
         let ipc_sender = ipc_sender.clone();
         tauri::async_runtime::spawn_blocking(move || {
