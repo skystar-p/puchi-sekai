@@ -4,5 +4,5 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "type")]
 pub enum IPCEvent {
     MainToggle,
-    ModalToggle,
+    OpenModal,
 }

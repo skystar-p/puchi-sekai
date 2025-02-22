@@ -153,7 +153,7 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
                     }
                 }
 
-                IPCEvent::ModalToggle => {
+                IPCEvent::OpenModal => {
                     if app_handle.get_webview_window("modal").is_some() {
                         continue;
                     }
