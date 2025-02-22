@@ -16,7 +16,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    Toggle,
+    MainToggle,
+    OpenModal,
 }
 
 #[tokio::main]
@@ -41,13 +42,15 @@ async fn main() -> anyhow::Result<()> {
 
     debug!("connected");
 
-    let cmd = cli.command.unwrap_or(Commands::Toggle);
+    let cmd = cli.command.unwrap_or(Commands::MainToggle);
 
     let event = match cmd {
-        Commands::Toggle => {
+        Commands::MainToggle => {
             debug!("toggling main");
             IPCEvent::MainToggle
         }
+
+        Commands::OpenModal => IPCEvent::OpenModal,
     };
 
     let event_serialized = serde_json::to_string(&event)?;
