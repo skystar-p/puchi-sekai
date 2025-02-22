@@ -10,3 +10,5 @@ zeromq = "0.4.1"
 puchi-sekai-common = { path = "../common" }
 tokio = { version = "1.43.0", features = ["full"] }
 anyhow = "1.0.95"
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"

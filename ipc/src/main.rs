@@ -1,22 +1,23 @@
 use puchi_sekai_common::IPCEvent;
+use tracing::debug;
 use zeromq::{Socket, SocketSend};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    println!("Connecting");
+    tracing_subscriber::fmt::init();
+
+    debug!("connecting to ipc");
+
     let mut socket = zeromq::ReqSocket::new();
-    socket
-        .connect("ipc:///tmp/puchi-sekai")
-        .await
-        .expect("Failed to connect");
+    socket.connect("ipc:///tmp/puchi-sekai").await?;
 
-    println!("Connected");
+    debug!("connected");
 
-    let event = IPCEvent {};
+    let event = IPCEvent::MainToggle;
     let event_serialized = serde_json::to_string(&event)?;
 
     socket.send(event_serialized.into()).await?;
-    println!("Sent");
+    debug!("successfully sent event");
 
     Ok(())
 }
