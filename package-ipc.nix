@@ -21,6 +21,6 @@ rustPlatform.buildRustPackage rec {
       src
       cargoRoot
       ;
-    hash = "sha256-rsf9xLmkLRo4JvZDb4PGWrjYHkUg/wjlG9kgx0Ee1nM=";
+    hash = "sha256-urEx6y70JC1Yvw/WdihUq8YCAQDMU/QKTyFkGWirK34=";
   };
 }
