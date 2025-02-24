@@ -12,16 +12,31 @@
 ,
 }:
 
+let
+  fs = lib.fileset;
+  sourceFiles = fs.intersection
+    (fs.gitTracked ./.)
+    (fs.unions [
+      ./main
+      ./common
+    ]);
+in
+
 stdenv.mkDerivation (finalAttrs: {
   pname = "puchi-sekai";
   version = "0.0.1";
 
-  src = lib.cleanSource ./.;
+  src = fs.toSource {
+    root = ./.;
+    fileset = sourceFiles;
+  };
 
   pnpmDeps = pnpm.fetchDeps {
     inherit (finalAttrs) pname version src;
+    sourceRoot = "${finalAttrs.src.name}/main";
     hash = "sha256-8UJOuh5QNrXWdsKFsXnb0U72COTDTU1Rm7IN9RTfl68=";
   };
+  pnpmRoot = "main";
 
   cargoDeps = rustPlatform.fetchCargoVendor {
     inherit (finalAttrs)
@@ -30,10 +45,10 @@ stdenv.mkDerivation (finalAttrs: {
       src
       cargoRoot
       ;
-    hash = "sha256-UyK1Ly5/+wo7bDYxl/s/b0hEf1545ifpfw6j0/nBNUM=";
+    hash = "sha256-G8NYSnCXfqJ1KBF16Q1TeR65XXaHnIw2gQiaTXFwt+o=";
   };
 
-  cargoRoot = "src-tauri";
+  cargoRoot = "main/src-tauri";
 
   buildAndTestSubdir = finalAttrs.cargoRoot;
 
