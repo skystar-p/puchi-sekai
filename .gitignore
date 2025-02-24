@@ -26,4 +26,4 @@ dist-ssr
 
 src-tauri/static/*
 result
-/target/
+target
