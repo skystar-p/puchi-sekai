@@ -1,8 +1,7 @@
-/* Basic editor styles */
 .tiptap {
-  :first-child {
-    margin-top: 0;
-  }
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
 
   /* List styles */
   ul,

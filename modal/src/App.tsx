@@ -5,7 +5,7 @@ import Editor from "./Editor";
 function App() {
 
   return (
-    <main>
+    <main className="container">
       <Editor />
     </main>
   );

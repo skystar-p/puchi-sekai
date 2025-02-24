@@ -1,0 +1,19 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0px;
+  padding: 0px;
+  overflow: hidden;
+}
+
+html, body, div#root, .container {
+  height: 100%;
+}
+
+.container > div {
+  height: 100%;
+}
