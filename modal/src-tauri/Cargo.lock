@@ -3081,12 +3081,14 @@ dependencies = [
 name = "puchi-sekai-modal"
 version = "0.1.0"
 dependencies = [
+ "puchi-sekai-common",
  "puchi-sekai-ipc",
  "serde",
  "serde_json",
  "tauri",
  "tauri-build",
  "tauri-plugin-opener",
+ "thiserror 2.0.11",
 ]
 
 [[package]]

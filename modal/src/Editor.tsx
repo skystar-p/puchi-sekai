@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core';
 import './editor.css'
 
 import { EditorProvider, Extension } from '@tiptap/react';
@@ -31,7 +32,11 @@ function Editor() {
   ];
 
   const handleSubmit = () => {
-    console.log("Submit");
+    const f = async () => {
+      await invoke("send_chat");
+    };
+
+    f();
   };
 
   return (
