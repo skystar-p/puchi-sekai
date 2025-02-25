@@ -1,23 +1,42 @@
 import './editor.css'
 
-import { EditorProvider } from '@tiptap/react';
+import { EditorProvider, Extension } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 
-const extensions = [
-  StarterKit.configure({
-    bulletList: {
-      keepMarks: true,
-      keepAttributes: false,
-    },
-    orderedList: {
-      keepMarks: true,
-      keepAttributes: false,
-    },
-  }),
-];
+function Editor() {
+  const extensions = [
+    StarterKit.configure({
+      bulletList: {
+        keepMarks: true,
+        keepAttributes: false,
+      },
+      orderedList: {
+        keepMarks: true,
+        keepAttributes: false,
+      },
+    }),
 
-export default () => {
+    Extension.create({
+      name: "custom-keymap",
+
+      addKeyboardShortcuts() {
+        return {
+          "Mod-Enter": () => {
+            handleSubmit();
+            return true;
+          },
+        }
+      },
+    }),
+  ];
+
+  const handleSubmit = () => {
+    console.log("Submit");
+  };
+
   return (
     <EditorProvider extensions={extensions}></EditorProvider>
   );
 }
+
+export default Editor;
