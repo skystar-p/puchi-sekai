@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
+use ipc_lib::send_ipc;
 use puchi_sekai_common::IPCEvent;
 use tracing::debug;
-use zeromq::{Socket, SocketSend};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -26,21 +26,9 @@ async fn main() -> anyhow::Result<()> {
 
     let cli = Cli::parse();
 
-    let socket_path = cli.socket.unwrap_or_else(|| "ipc:///tmp/puchi-sekai".into());
-
-    // check socket exists if starts with ipc://
-    if socket_path.starts_with("ipc://") {
-        let socket_path = socket_path.replace("ipc://", "");
-        if !std::path::Path::new(&socket_path).exists() {
-            anyhow::bail!("socket path does not exist");
-        }
-    }
-
-    debug!("connecting to ipc");
-    let mut socket = zeromq::ReqSocket::new();
-    socket.connect(&socket_path).await?;
-
-    debug!("connected");
+    let socket_path = cli
+        .socket
+        .unwrap_or_else(|| "ipc:///tmp/puchi-sekai".into());
 
     let cmd = cli.command.unwrap_or(Commands::MainToggle);
 
@@ -50,13 +38,13 @@ async fn main() -> anyhow::Result<()> {
             IPCEvent::MainToggle
         }
 
-        Commands::OpenModal => IPCEvent::OpenModal,
+        Commands::OpenModal => {
+            debug!("opening modal");
+            IPCEvent::OpenModal
+        }
     };
 
-    let event_serialized = serde_json::to_string(&event)?;
-
-    socket.send(event_serialized.into()).await?;
-    debug!("successfully sent event");
+    send_ipc(socket_path, event).await?;
 
     Ok(())
 }

@@ -3,6 +3,14 @@ name = "puchi-sekai-ipc"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "ipc"
+path = "src/main.rs"
+
+[lib]
+name = "ipc_lib"
+path = "src/lib.rs"
+
 [dependencies]
 serde = "1.0.217"
 serde_json = "1.0.138"
