@@ -127,6 +127,7 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
 
     let (ipc_sender, ipc_receiver) = tokio::sync::mpsc::channel::<tauri::Event>(100);
 
+    let app_handle = app.handle().clone();
     MainContext::default().spawn_local(async move {
         let gtk_window = gtk_window.clone();
         let mut receiver = ipc_receiver;
@@ -142,8 +143,10 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
                 continue;
             };
 
+            let event_cloned = event.clone();
             match event {
                 IPCEvent::MainToggle => {
+                    debug!("Received main toggle event: {:?}", event);
                     let gtk_window = gtk_window.lock().await;
                     if gtk_window.is_visible() {
                         gtk_window.hide();
@@ -152,8 +155,9 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
                     }
                 }
 
-                _ => {
-                    debug!("Received unknown IPC event: {:?}", event);
+                IPCEvent::Chat { message: _ } => {
+                    debug!("Received chat event: {:?}", event);
+                    app_handle.emit("ipc-event", event_cloned).unwrap();
                 }
             }
         }

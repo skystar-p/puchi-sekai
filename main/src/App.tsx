@@ -6,6 +6,7 @@ import { Channel, invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import './zip';
 import { Ticker } from 'pixi.js';
+import { listen } from '@tauri-apps/api/event';
 
 Live2dConfig.logLevel = Live2dConfig.LOG_LEVEL_VERBOSE;
 
@@ -34,6 +35,14 @@ type ChatEvent =
   }
   ;
 
+type IPCEvent =
+  |
+  {
+    type: "chat";
+    message: string;
+  }
+  ;
+
 function App() {
   const stage = useRef<Stage>(null);
   const [stageWidth, setStageWidth] = useState(0);
@@ -43,10 +52,8 @@ function App() {
   const [chatHeight, setChatHeight] = useState(0);
 
   const [chatResponse, setChatResponse] = useState("");
-  const [chatPrompt, setChatPrompt] = useState("");
   const [chatResponseHistory, setChatResponseHistory] = useState<string[]>([]);
   const [chatPromptHistory, setChatPromptHistory] = useState<string[]>([]);
-  const chatPromptRef = useRef<HTMLInputElement>(null);
   const [chatting, setChatting] = useState(false);
 
   const live2dModel = useRef<Live2DModel<InternalModel>>(null);
@@ -183,16 +190,6 @@ function App() {
     }
   }, [updateSize]);
 
-  const clearChatPrompts = () => {
-    setChatResponse("");
-    setChatPrompt("");
-    setChatResponseHistory([]);
-    if (chatPromptRef.current) {
-      chatPromptRef.current.focus();
-      chatPromptRef.current.value = "";
-    }
-  };
-
   const doMotion = (group: string, index: number = 0, managerIdx: number = 0) => {
     if (!live2dModel.current) {
       return;
@@ -219,12 +216,11 @@ function App() {
     return done
   };
 
-  const submitChat = async () => {
+  const submitChat = async (chatPrompt: string) => {
     if (chatting || !chatPrompt) {
       return;
     }
     if (chatPrompt === "RESET") {
-      clearChatPrompts();
       return;
     }
     let chatPromptCopy = chatPrompt;
@@ -268,11 +264,6 @@ function App() {
           break;
         case "finished":
           setChatting(false);
-          setChatPrompt("");
-          if (chatPromptRef.current) {
-            chatPromptRef.current.focus();
-            chatPromptRef.current.value = "";
-          }
           setChatResponseHistory([...chatResponseHistory, chatResponse]);
           setChatPromptHistory([...chatPromptHistory, chatPromptCopy]);
           await Promise.all([
@@ -283,11 +274,6 @@ function App() {
         case "error":
           setChatting(false);
           setChatResponse("에러!");
-          setChatPrompt("");
-          if (chatPromptRef.current) {
-            chatPromptRef.current.focus();
-            chatPromptRef.current.value = "";
-          }
           await Promise.all([
             doMotion("w-cool-sad01", 0, 0),
             doMotion("face_baffling_01", 0, 1),
@@ -306,6 +292,37 @@ function App() {
     })
   };
 
+  // setup global ipc event listener
+  useEffect(() => {
+    let unlisten: () => void;
+    const wrapper = async () => {
+      const u = await listen<IPCEvent>("ipc-event", (event) => {
+        const payload = event.payload;
+        const f = async () => {
+          switch (payload.type) {
+            case "chat":
+              await submitChat(payload.message);
+              break;
+            default:
+              // do nothing
+              break;
+          }
+        }
+        f();
+      });
+
+      unlisten = u;
+    };
+
+    wrapper();
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    }
+  }, [])
+
   return (
     <main>
       <div
@@ -318,16 +335,6 @@ function App() {
         <p className="chat-child">
           {chatResponse}
         </p>
-        <form
-          className="row"
-          onSubmit={(e) => {
-            e.preventDefault();
-            submitChat();
-          }}
-        >
-          <input className="chat-child" onChange={(e) => setChatPrompt(e.currentTarget.value)} ref={chatPromptRef}>
-          </input>
-        </form>
       </div>
       <Stage
         width={stageWidth}
