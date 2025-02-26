@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import './editor.css'
+import './Editor.css'
 
 import { EditorProvider, Extension } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
