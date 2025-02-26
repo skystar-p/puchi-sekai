@@ -296,19 +296,16 @@ function App() {
   useEffect(() => {
     let unlisten: () => void;
     const wrapper = async () => {
-      const u = await listen<IPCEvent>("ipc-event", (event) => {
+      const u = await listen<IPCEvent>("ipc-event", async (event) => {
         const payload = event.payload;
-        const f = async () => {
-          switch (payload.type) {
-            case "chat":
-              await submitChat(payload.message);
-              break;
-            default:
-              // do nothing
-              break;
-          }
+        switch (payload.type) {
+          case "chat":
+            await submitChat(payload.message);
+            break;
+          default:
+            // do nothing
+            break;
         }
-        f();
       });
 
       unlisten = u;
