@@ -157,6 +157,12 @@ fn setup<'a>(app: &'a mut tauri::App) -> Result<(), Box<dyn std::error::Error>> 
 
                 IPCEvent::Chat { message: _ } => {
                     debug!("Received chat event: {:?}", event);
+                    // show window if hidden
+                    let gtk_window = gtk_window.lock().await;
+                    if !gtk_window.is_visible() {
+                        gtk_window.show();
+                    }
+                    drop(gtk_window);
                     app_handle.emit("ipc-event", event_cloned).unwrap();
                 }
             }
