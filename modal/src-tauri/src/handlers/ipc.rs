@@ -17,12 +17,10 @@ impl serde::Serialize for Error {
 }
 
 #[tauri::command]
-pub async fn send_chat() -> Result<(), Error> {
+pub async fn send_chat(content: String) -> Result<(), Error> {
     let socket_path = "ipc:///tmp/puchi-sekai";
 
-    let event = IPCEvent::Chat {
-        message: "안녕!".to_string(),
-    };
+    let event = IPCEvent::Chat { message: content };
 
     ipc_lib::send_ipc(&socket_path, event)
         .await

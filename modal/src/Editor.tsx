@@ -23,7 +23,8 @@ function Editor() {
       addKeyboardShortcuts() {
         return {
           "Mod-Enter": () => {
-            handleSubmit();
+            const content = this.editor.getText();
+            handleSubmit(content);
             return true;
           },
         }
@@ -31,9 +32,9 @@ function Editor() {
     }),
   ];
 
-  const handleSubmit = () => {
+  const handleSubmit = (content: string) => {
     const f = async () => {
-      await invoke("send_chat");
+      await invoke("send_chat", { content });
     };
 
     f();
