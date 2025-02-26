@@ -13,6 +13,7 @@
     "@pixi/react": "7",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
+    "async-mutex": "^0.5.0",
     "axios": "^1.7.9",
     "jszip": "^3.10.1",
     "pixi-live2d-display-mulmotion": "0.5.0-mm-5",

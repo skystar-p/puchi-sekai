@@ -7,8 +7,12 @@ import "./App.css";
 import './zip';
 import { Ticker } from 'pixi.js';
 import { listen } from '@tauri-apps/api/event';
+import { Mutex } from 'async-mutex';
 
 Live2dConfig.logLevel = Live2dConfig.LOG_LEVEL_VERBOSE;
+
+const ipcListenMutex = new Mutex();
+let ipcListening = false;
 
 type ChatEvent =
   |
@@ -295,27 +299,36 @@ function App() {
   // setup global ipc event listener
   useEffect(() => {
     let unlisten: () => void;
-    const wrapper = async () => {
-      const u = await listen<IPCEvent>("ipc-event", async (event) => {
-        const payload = event.payload;
-        switch (payload.type) {
-          case "chat":
-            await submitChat(payload.message);
-            break;
-          default:
-            // do nothing
-            break;
-        }
-      });
 
-      unlisten = u;
-    };
+    ipcListenMutex.runExclusive(async () => {
+      if (ipcListening) {
+        return;
+      }
 
-    wrapper();
+      const wrapper = async () => {
+        const u = await listen<IPCEvent>("ipc-event", async (event) => {
+          const payload = event.payload;
+          switch (payload.type) {
+            case "chat":
+              await submitChat(payload.message);
+              break;
+            default:
+              // do nothing
+              break;
+          }
+        });
+
+        unlisten = u;
+      };
+
+      wrapper();
+      ipcListening = true;
+    })
 
     return () => {
       if (unlisten) {
         unlisten();
+        ipcListening = false;
       }
     }
   }, [])
