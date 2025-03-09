@@ -17,12 +17,21 @@ div.chat {
   padding: 10px;
 
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-start;
   overflow-y: auto;
 
   border: 2px solid #FFD95F;
   background-color: rgba(255, 239, 200, 0.9);
   border-radius: 16px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  height: fit-content;
+}
+
+div.chat.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .chat-child {

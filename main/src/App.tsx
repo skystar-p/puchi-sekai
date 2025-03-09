@@ -336,10 +336,12 @@ function App() {
   return (
     <main>
       <div
-        className="chat"
+        className={`chat ${chatResponse ? 'visible' : ''}`}
         style={{
           width: chatWidth,
-          height: chatHeight,
+          minHeight: "auto",
+          maxHeight: chatHeight,
+          visibility: chatResponse ? 'visible' : 'hidden',
         }}
       >
         <p className="chat-child">
