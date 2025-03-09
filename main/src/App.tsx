@@ -334,7 +334,7 @@ function App() {
   }, [])
 
   return (
-    <main>
+    <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', justifyContent: 'flex-end' }}>
       <div
         className={`chat ${chatResponse ? 'visible' : ''}`}
         style={{
@@ -342,6 +342,8 @@ function App() {
           minHeight: "auto",
           maxHeight: chatHeight,
           visibility: chatResponse ? 'visible' : 'hidden',
+          marginBottom: '20px',
+          alignSelf: 'center'
         }}
       >
         <p className="chat-child">

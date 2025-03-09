@@ -9,6 +9,11 @@ body {
   padding: 0px;
   text-align: center;
   overflow: hidden;
+  height: 100vh;
+}
+
+html {
+  height: 100%;
 }
 
 div.chat {
