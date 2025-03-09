@@ -30,9 +30,9 @@ const Tiptap = () => {
             "Mod-Enter": () => {
               if (!this.editor) return false;
               const content = this.editor.getText();
-              handleSubmit(content);
-              // Clear the editor after sending
-              this.editor.commands.clearContent(true);
+              if (content.trim()) {
+                handleSubmit(content);
+              }
               return true;
             },
           }
@@ -52,26 +52,26 @@ const Tiptap = () => {
     }
   }, [editor]);
 
-  const handleSubmit = (content: string) => {
+  const handleSubmit = async (content: string) => {
     if (!content.trim()) return;
 
-    const f = async () => {
+    try {
+      // Send the message - the Rust side will handle application exit
       await invoke("send_chat", { content });
-    };
 
-    f();
+      // The application will be terminated by the Rust side
+      // No need to call window.close() here
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   const onSubmitClick = useCallback(() => {
     if (!editor) return;
     const content = editor.getText();
-    handleSubmit(content);
-    // Clear the editor after sending
-    editor.commands.clearContent(true);
-    // Refocus the editor
-    setTimeout(() => {
-      editor.commands.focus('end');
-    }, 10);
+    if (content.trim()) {
+      handleSubmit(content);
+    }
   }, [editor]);
 
   return (

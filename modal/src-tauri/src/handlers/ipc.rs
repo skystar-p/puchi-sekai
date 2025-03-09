@@ -1,4 +1,5 @@
 use puchi_sekai_common::IPCEvent;
+use tauri::Manager;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -17,14 +18,24 @@ impl serde::Serialize for Error {
 }
 
 #[tauri::command]
-pub async fn send_chat(content: String) -> Result<(), Error> {
+pub async fn send_chat(window: tauri::Window, content: String) -> Result<(), Error> {
     let socket_path = "ipc:///tmp/puchi-sekai";
 
     let event = IPCEvent::Chat { message: content };
 
+    // Send the IPC message
     ipc_lib::send_ipc(&socket_path, event)
         .await
         .map_err(|_| Error::IPCError)?;
 
+    // Exit the application
+    window.app_handle().exit(0);
+
     Ok(())
+}
+
+// Command to exit the application
+#[tauri::command]
+pub fn exit_app(app_handle: tauri::AppHandle) {
+    app_handle.exit(0);
 }

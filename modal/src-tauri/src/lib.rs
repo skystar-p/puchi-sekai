@@ -4,7 +4,10 @@ mod handlers;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![handlers::ipc::send_chat])
+        .invoke_handler(tauri::generate_handler![
+            handlers::ipc::send_chat,
+            handlers::ipc::exit_app
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
